@@ -1,0 +1,71 @@
+---
+fail_fast: false
+
+default_language_version:
+  python: python3.11.1
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 'v4.1.0'
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=200']
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: fix-encoding-pragma
+        args: ['--remove']
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+  #end pre-commit-hooks
+
+  - repo: local
+    hooks:
+      - id: add-trailing-comma
+        name: add trailing comma to python code
+        entry: add-trailing-comma --py36-plus
+        language: system
+        types: [python]
+
+      - id: isort
+        name: isort python imports
+        entry: isort
+        language: system
+        types: [python]
+
+      - id: flake8
+        name: check code style using flake8
+        entry: flake8
+        language: system
+        types: [python]
+
+      - id: django-makemigrations
+        name: check outstanding migrations in django project
+        entry: python manage.py makemigrations --check --dry-run
+        pass_filenames: false
+        language: system
+        types: [python]
+
+      - id: django-check
+        name: check the entire django project for potential problems
+        entry: python manage.py check
+        pass_filenames: false
+        language: system
+        types: [python]
+#end local
