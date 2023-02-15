@@ -10,4 +10,5 @@ router.register(r'', NoteViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+
 ]

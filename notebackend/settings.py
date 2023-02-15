@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -67,6 +72,8 @@ SIMPLE_JWT = {
 
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+AUTH_USER_MODEL = "auths.CustomUser"
 
 ROOT_URLCONF = 'notebackend.urls'
 
@@ -140,3 +147,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = env("HOST")
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env("HOST_USER")
+EMAIL_HOST_PASSWORD = env("HOST_PASSWORD")
+EMAIL_PORT = env("HOST_PORT")
