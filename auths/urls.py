@@ -3,13 +3,13 @@ from django.urls import path
 
 from rest_framework.routers import DefaultRouter
 
-from .views import UserLoginViewSet
-from .views import UserRegistrationViewSet
+from .views import LoginView
+from .views import RegisterView
 
 router = DefaultRouter()
-router.register('register', UserRegistrationViewSet, basename='register')
-router.register('login', UserLoginViewSet, basename='login')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
 ]
