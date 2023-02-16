@@ -36,10 +36,3 @@ class NoteSerializer(serializers.ModelSerializer):
                 emails_exist[email] = user.id
 
         return emails_exist
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        user = self.context.get('request').user
-        if (instance.author == user) | (instance.shared_with.filter(id=user.id).exists()):
-            return data
-        return None

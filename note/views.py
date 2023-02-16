@@ -21,9 +21,10 @@ class NoteViewSet(viewsets.ModelViewSet):
         query = self.request.query_params.get('search', '')
         current_date = date.today()
         return Note.objects.filter(
-            Q(text__icontains=query) &
-            (Q(archived_at__gte=current_date) | Q(archived_at=None)),
-        )
+            (Q(author=self.request.user) | Q(shared_with__in=[self.request.user])) &
+            (Q(archived_at__gte=current_date) | Q(archived_at=None)) &
+            Q(text__icontains=query),
+        ).distinct()
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
