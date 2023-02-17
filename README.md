@@ -9,6 +9,8 @@ A user can create notes and also can delete, search and update them after loggin
   - Note can be archived
   - Share Note with other user
   - Send email notification for shared note
+  - Version Management of Note
+  - Comments on Note
 
 ### Postman Collection:
 Link : [Postman Collection](https://documenter.getpostman.com/view/22404453/2s935vjKNC)
