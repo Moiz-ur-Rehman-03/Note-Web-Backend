@@ -6,17 +6,18 @@ from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from utils.send_email import send_email
 
 from .custom_filters import ArchivedAtFilterBackend
+from .models import Comment
 from .models import Note
 from .models import NoteVersion
 from .permissions import IsAuthor
 from .permissions import IsSharedWith
 from .serializers import CommentSerializer
 from .serializers import NoteSerializer
+from .serializers import VersionHistorySerializer
 
 
 class NoteViewSet(viewsets.ModelViewSet):
@@ -53,9 +54,17 @@ class NoteViewSet(viewsets.ModelViewSet):
         return Response(serializer.validated_data)
 
 
-class CommentCreateAPIView(generics.CreateAPIView):
+class CommentGetAndCreateAPIView(generics.CreateAPIView, generics.ListAPIView):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        note_id = self.kwargs.get('note_id')
+        user = self.request.user
+        return Comment.objects.filter(
+            Q(note=note_id) &
+            (Q(note__author=user) | Q(note__shared_with__in=[user])),
+        ).order_by('-created_at').distinct()
 
     def create(self, request, *args, **kwargs):
         note_id = kwargs['note_id']
@@ -71,23 +80,40 @@ class CommentCreateAPIView(generics.CreateAPIView):
             return Response({"error": "You are not authorized to create a comment on this note."}, status=status.HTTP_403_FORBIDDEN)
 
 
-class RevertNoteAPIView(APIView):
+class VersionGetAPIView(generics.ListAPIView):
+    serializer_class = VersionHistorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, note_id):
+    def get_queryset(self):
+        note_id = self.kwargs.get('note_id')
+        user = self.request.user
+        return NoteVersion.objects.filter(
+            Q(note=note_id) &
+            (Q(note__author=user) | Q(note__shared_with__in=[user])),
+        ).order_by('-created_at').distinct()
+
+
+class VersionPutAPIView(generics.UpdateAPIView):
+    serializer_class = VersionHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, note_id, version_id):
         try:
             note = Note.objects.get(id=note_id)
-            version_notes = NoteVersion.objects.filter(note=note).order_by('created_at')
+            version_note = NoteVersion.objects.filter(Q(note=note) & Q(id=version_id)).order_by('created_at')
 
-            if len(version_notes) < 2:
-                return Response({"detail": "No previous versions found"}, status=status.HTTP_400_BAD_REQUEST)
-
-            original_version = version_notes[0]
-            note.text = original_version.content
+            note.text = version_note[0].content
             note.save()
+            NoteVersion.objects.create(
+                note=note,
+                content=note.text,
+                author=note.author,
+            )
 
             serializer = NoteSerializer(note, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Note.DoesNotExist:
             return Response({"detail": "Note not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_404_NOT_FOUND)

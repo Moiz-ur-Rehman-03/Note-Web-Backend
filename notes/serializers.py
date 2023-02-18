@@ -48,7 +48,7 @@ class NoteSerializer(serializers.ModelSerializer):
         if "text" in validated_data and validated_data["text"] != instance.text:
             NoteVersion.objects.create(
                 note=instance,
-                content=instance.text,
+                content=validated_data["text"],
                 author=self.context['request'].user,
             )
         instance = super().update(instance, validated_data)
@@ -88,8 +88,8 @@ class NoteSerializer(serializers.ModelSerializer):
             user = request.user
             shared_with = instance.shared_with.all()
             if user == instance.author or user in shared_with:
-                ret['comments'] = CommentSerializer(instance.comments.order_by('-created_at'), many=True).data
-                ret['versions'] = VersionHistorySerializer(instance.versions.order_by('-created_at'), many=True).data
+                ret['comments'] = CommentSerializer(instance.comments.order_by('-created_at'), many=True).data[:10]
+                ret['versions'] = VersionHistorySerializer(instance.versions.order_by('-created_at'), many=True).data[:10]
                 ret['shared_with'] = UserSerializer(instance.shared_with, many=True).data
             else:
                 ret.pop('comments')

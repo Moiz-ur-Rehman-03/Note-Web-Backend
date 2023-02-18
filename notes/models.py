@@ -31,4 +31,4 @@ class NoteVersion(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='note_versions', default=1)
 
     def __str__(self):
-        return f"Note id: {self.note.id} - Version number:{self.id} - Version by {self.author.id}"
+        return f"Note id: {self.note.id} - Version number:{self.id} - Version by {self.author.id} - Version content:{self.content}"
